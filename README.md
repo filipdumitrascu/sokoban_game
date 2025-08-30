@@ -1,122 +1,136 @@
-# Proiect 1 Inteligenta Artificiala - Sokoban
+# Project 1 Artificial Intelligence - Sokoban
 
 #### Dumitrascu Filip-Teodor 333CA
 
-## Continut
-1. [Introducere](#introducere)  
-2. [Algoritmi](#algoritmi)  
-   (optimizari, element cerut la cerinta 3)  
-3. [Euristici](#euristici)  
-   (jurnalizare, element cerut la cerinta 3)  
-4. [Comparatie](#comparatie)  
-   (comparatie calitativa si cantitativa, element cerinta 3)
+## Content
+1. [Introduction](#introduction)
+2. [Algorithms](#algorithms)
+3. [Heuristics](#heuristics)
+4. [Comparison](#comparison)
 
-## Introducere
-Proiectul presupune rezolvarea jocului Sokoban, joc in care un player trebuie sa
-impinga cutii pe anumite pozitii pe o harta cu obstacole. Structura proiectului
-consta in:
-- `search_methods` - Director unde sunt implementati algoritmii folositi pentru rezolvare
-- `sokoban` - Implementarea efectiva a jocului. (cum arata harta, o cutie, playerul, etc)
-- `tests` - Hartile generate in format yaml pe care se testeaza implementarea
-- `images` - imagini cu rezultate, gifuri cu solutia si grafice
-- `main.ipynb` - logica de testare
+## Introduction
+The project involves solving the Sokoban game, in which a player must
+push boxes to specific positions on a map with obstacles. The project structure
+consists of:
+- `search_methods` - Directory where the algorithms used for solving are implemented
+- `sokoban` - The actual implementation of the game. (how the map, a box, the player, etc. look)
+- `tests` - Maps generated in yaml format on which the implementation is tested
+- `images` - images with results, gifs with the solution, and graphs
+- `main.ipynb` - testing logic
 
-## Algoritmi
-Sunt utilizati 2 algoritmi din categoria problemelor de cautare in spatii de stari:
+## Algorithms
+Two algorithms from the category of search problems in state spaces are used:
 - `LRTA*`: `search_methods/lrta_star.py`
 - `Beam Search`: `search_methods/beam_search.py`
 
 ### LRTA*
-#### Idee de baza + adaptare la Sokoban
-1. Se adaga intr-o tabela cum estimeaza momentan euristica pana la goal state
-din starea curenta
-2. Daca starea curenta e solutia return
-3. Retine cum se poate ajunge la toti succesorii (adica in cadrul succesroului,
-din starea anterioara)
-4. Se alege cea mai promitatoare miscare (cel mai bun vecin, cost + H[vecin] minim)
-5. Se actualizeaza in tabela: euristica starii curente fata de cel mai bun vecin
-6. Mutarea pe vecin (next state) si se repeta (tot in limita unui numar de pasi)
+#### Basic idea + adaptation to Sokoban
+1. Add to a table how the heuristic currently estimates the goal state
+from the current state
+2. If the current state is the solution, return
+3. Remember how to reach all successors (i.e., within the successor,
+from the previous state)
+4. Choose the most promising move (best neighbor, minimum cost + H[neighbor])
+5. Update the table: heuristic of the current state relative to the best neighbor
+6. Move to the neighbor (next state) and repeat (again within a limited number of steps)
 
-#### Optimizari
-- Intrucat lrta* se poate bloca intr-o stare din care sa nu isi mai poata updata 
-tabela de euristici si nici sa ajuga in goal state, se da restart in starea initiala
-dar cu ce a "invatat" pana acum. (adica tabela de euristici nemodificata)
+#### Optimizations
+- Since lrta* can get stuck in a state where it can no longer update 
+its heuristic table or reach the goal state, it is restarted in its initial state
+but with what it has "learned" so far. (i.e., the unmodified heuristic table)
 
-#### Concluzii
-- Daca euristica nu il ghideaza bine, algoritmul poate deveni foarte lent. 
-- Fara optimizarea precedenta (restart), pe hartile mari: `hard_map1`, `large_map2`,
-`super_hard_map1` fara miscari de pull algoritmul nu gaseste solutie (implementate
-in schelet dar nu respecta regulile jocului). Cu toate acestea, e posibil sa gaseasca
-daca se foloseste o euristica mai complexa decat cele cunoscute. (s-ar putea sa fie
-overfitting pe teste, detalii in sectiune urmatoare)
+#### Conclusions
+- If the heuristics do not guide it well, the algorithm can become very slow. 
+- Without the previous optimization (restart), on large maps: `hard_map1`, `large_map2`,
+`super_hard_map1` without pull moves, the algorithm does not find a solution (implemented
+in the skeleton but does not follow the rules of the game). However, it is possible to find
+if a more complex heuristic than the known ones is used. (There may be
+overfitting on tests, details in the next section)
 
 ### Beam Search
-#### Idee de baza + adaptare la Sokoban
-1. Starile in care se poate afla jocul sunt salvate in beam (frontiera acestui algoritm).
-Initial doar prima stare (cea cu care incepe jocul) este introdusa.
-2. Se parcurg starile din beam. Daca vreuna este cea finala, return
-3. Genereaza toate succesoarele din starile beamului
-4. Sorteaza succesoarele dupa valoarea ce mai mica a euristicii si se pastreaza
-in beam cele mai bune `beam_width` stari.
-5. Daca nu se gaseste solutia dupa un numar de pasi, se opreste cautarea si se
-returneaza pathul curent.
+#### Basic idea + adaptation to Sokoban
+1. The states in which the game can be found are saved in the beam (the frontier of this algorithm).
+Initially, only the first state (the one with which the game begins) is entered.
+2. The states in the beam are traversed. If any of them is the final state, return
+3. Generate all successors from the states in the beam
+4. Sort the successors by the smallest heuristic value and keep
+the best `beam_width` states in the beam.
+5. If the solution is not found after a number of steps, stop the search and
+return the current path.
 
-#### Optimizari
-- Se evita ciclarea intre stari prin adaugarea unui set `visited` de stari vizitate
-- Se introduce stocasticitatea, modificarea usoara a valorii euristicii pentru a alege
-diverse directii de explorare (nu se blocheaza pe un shoulder, minime locale cu aceesi valoare)
-- Se reporneste cautarea (in limita pasiilor introdusi) cand nu se mai progreseaza 
-(se iese din maxim local)
+#### Optimizations
+- Avoid cycling between states by adding a `visited` set of visited states
+- Introduce stochasticity, slightly modifying the heuristic value to choose
+various exploration directions (does not get stuck on a shoulder, local minima with the same value)
+- Restart the search (within the limits of the steps introduced) when no further progress is made 
+(exit from the local maximum)
 
-#### Concluzii
-- Latimea beamului este flexibila si aduce consecinte. Un `beam_width` insuficient de
-mare rateaza solutia pe teste grele (`hard_map1` - min 100, `large_map2` - min 100,
+#### Conclusions
+- Beam width is flexible and has consequences. An insufficiently large `beam_width`
+fails the solution on hard tests (`hard_map1` - min 100, `large_map2` - min 100,
 `super_hard_map1` - min 450)
 
-| | Memorie consumata | Viteza rulare | Gasirea solutiei |
-|-|-------------------|---------------|------------------|
-| Beam Width Mic | Putina | Foarte rapid | Risca sa rateze solutia |
-| Beam Width Mare | Mai multa | Mai lent | Mai sigur (solutie gasita mai des) |
+| | Memory consumption | Running speed | Finding the solution |
+|-|------------------ -|---------------|------------------|
+| Small Beam Width | Low | Very fast | Risk of missing the solution |
+| Large Beam Width | Higher | Slower | More reliable (solution found more often) |
 
-## Euristici
-Situate in `search_methods/heuristics.py` reprezinta o estimare a numarului de stari
-pentru a ajunge o anumita cutie pe un anumit target. (o euristica consistenta
-este si admisibila)
+## Heuristics
+Located in `search_methods/heuristics.py`, these represent an estimate of the number of states
+required to reach a specific box on a specific target. (A consistent heuristic
+is also acceptable.)
 
-1. Cea mai intuitiva si prima heuristica folosita a fost `heur_displaced`.
-Se bazeaza pe numararea a cator cutii sunt pe pozitia goal intr-un anumit state*
-(daca returneaza 0, toate sunt la locul lor). **Admisibila? Nu!**
-Din moment ce nu verifica in niciun fel pasii mini pentru a ajunge la target, poate
-supraestima acest cost. (imposibil pentru o euristica, trebuie sa subestimeze sau sa
-reprezinte costul real) ==> nefolosita la compare
+1. The most intuitive and first heuristic used was `heur_displaced`.
+It is based on counting how many boxes are in the empty position in a certain state*
+(if it returns 0, all are in their place). **Admissible? No!**
+Since it does not check the mini steps to reach the target in any way, it may
+overestimate this cost. (impossible for a heuristic, it must underestimate or
+represent the real cost) ==> not used in comparison
 
-2. Urmatoarea euristica folosita a fost `heur_euclidean_distance` suma distantelor
-euclidiene de la cutii la cel mai apropiat target. **Consistenta? Da!** dar nu indeajus
-de realista pentru jocul sokoban. ==> folosita la compare
+2. The next heuristic used was `heur_euclidean_distance`, the sum of the Euclidean distances
+from the boxes to the nearest target. **Consistent? Yes!** but not realistic enough
+for the Sokoban game. ==> used in comparison
 
-3. O euristica mai potrivita bazata pe distante pentru jocul sokoban este
-`heur_manhattan_distance`. Intrucat jucatorul se poate muta N E S V ci nu pe diagonala,
-distanta manhattan ajuta mai tare: Suma distantelor manhattan (patrate pe orizontata + 
-patrate pe verticala) de la cutii la cel mai apropiat target. **Consistenta? Da!**
-==> folosita la compare
+3. A more suitable distance-based heuristic for the Sokoban game is
+`heur_manhattan_distance`. Since the player can move N E S W but not diagonally,
+the Manhattan distance is more helpful: the sum of the Manhattan distances (squares horizontally + 
+squares vertically) from the boxes to the nearest target. **Consistency? Yes!**
+==> used in compare
 
-4. Pentru LRTA* s-a incercat un improvement la aceasta euristica. Rezultatul se gaseste
-in `heur_improved` si reprezinta un manhattan in care se tine cont de deadlockuri:
-edge-uri care nu duc catre targeturi `edge_deadlock` (si de pe care nu se poate scoate
-cutia decat printr-un pull), corner-e `corner_deadlock`(la fel, doar prin pull) si
-vecini ale acestor stari de tip deadlock `box_unpushable`. **Adimisibila? Da!**
-(se pastreaza de la manhattan). **Consistenta? Nu!** (deadlockurile modifica costul
-si nu functioneaza pentru teste mari `large`, `hard`, `super_hard`) ==> nefolosita la compare
+4. For LRTA*, an improvement to this heuristic was attempted. The result can be found
+in `heur_improved` and represents a Manhattan distance that takes deadlocks into account:
+edges that do not lead to targets `edge_deadlock` (and from which the box cannot be removed
+except by a pull), corners `corner_deadlock` (same, only by pull) and
+neighbors of these deadlock states `box_unpushable`. **Admissible? Yes!**
+(kept from Manhattan). **Consistent? No!** (deadlocks change the cost
+and do not work for large tests `large`, `hard`, `super_hard`) ==> not used in comparison
 
-5. Pentru imbunatatirea generala a euristicilor, s-a introdus `heur_hungarian`,
-bazata pe algoritmul de assignment optim (Hungarian Algorithm). Aceasta euristica
-cauta asocierea cutii - target astfel incat suma costurilor sa fie minima globala.
-In loc sa ia fiecare cutie la cel mai apropiat target individual (ca la manhattan),
-cauta solutia combinata cea mai ieftina. **Consistenta? Da!** (este insa mai costisitoare computațional decat heuristica simpla.) ==> folosita la compare
+5. For the general improvement of heuristics, `heur_hungarian` was introduced,
+based on the optimal assignment algorithm (Hungarian Algorithm). This heuristic
+searches for box-target associations such that the sum of costs is globally minimal.
+Instead of taking each box to the nearest individual target (as in Manhattan),
+it searches for the cheapest combined solution. **Consistency? Yes!** (However, it is more computationally expensive than the simple heuristic.) ==> used in compare
 
-## Comparatie
+## Comparison
 ![alt text](images/plots/runtime.png)
+
+- LRTA* shows very large runtime spikes (e.g., Hungarian on super_hard_map1), which correlate with the explosion in states expanded. For small/easy maps, runtime is low, but it quickly becomes impractical for complex ones.
+- Beam Search has stable runtimes across all maps and heuristics. Even on harder maps, execution remains in a reasonable range compared to LRTA*.
+
+Conclusion: Beam Search is more time-efficient and predictable, while LRTA* is highly unstable and can become very costly on hard instances.
+
 
 ![alt text](images/plots/solution_length.png)
 
+- LRTA* tends to produce longer and highly variable solutions, particularly with Hungarian on larger maps (e.g., large_map2 and super_hard_map1).
+- Beam Search consistently finds shorter solutions with small differences between heuristics. Even on harder maps, the solution lengths stay relatively close.
+
+Conclusion: Beam Search achieves more compact solutions, while LRTA* sacrifices solution quality in harder maps.
+
+
 ![alt text](images/plots/states_expanded.png)
+
+- LRTA* expands a huge number of states on most maps, especially with more complex ones (e.g., large_map1, hard_map1, super_hard_map1). The Hungarian heuristic sometimes performs better, but it can also blow up (super_hard_map1).
+- Beam Search, in contrast, expands far fewer states overall, and the results are much more consistent across maps and heuristics. This indicates that Beam Search is more efficient in terms of search space explored.
+
+Conclusion: Beam Search is significantly more state-efficient, while LRTA* struggles with scalability.
